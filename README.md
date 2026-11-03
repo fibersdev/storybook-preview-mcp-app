@@ -53,9 +53,11 @@ The preview is an MCP App: a small web page the chat draws under the tool call. 
 
 ## Why it is built this way
 
-At least one host gives an MCP App (a small web page the chat draws under a tool call) no network access. In my testing in the Claude desktop app's Code tab (November 2026), the page could not load a frame, script, stylesheet or image from `localhost`, even with that address listed as allowed. That rules out pointing a frame at a running Storybook in that host. As I understand it, that is the approach Storybook's own MCP addon takes, and in the same test its frame stayed empty for me. It may well work in hosts that allow `localhost`.
+At least one host gives an MCP App (a small web page the chat draws under a tool call) no network access. In my testing in the Claude desktop app's Code tab (November 2026), the page could not load a frame, script, stylesheet or image from `localhost`, even with that address listed as allowed. That rules out pointing a frame at a running Storybook in that host.
 
-What the page can do is read the result of the tool call. So each preview builds the one stories file with your project's own Vite and Storybook config into a single script and stylesheet, fonts and images inlined, and sends that in the result's `_meta` field (a part of the tool result the page can read but Claude doesn't see). In my runs, `_meta` reached the page without being added to Claude's context, so a preview cost one line of context however large the bundle was.
+As I understand it, that is the approach Storybook's own MCP addon takes, and in the same test its frame stayed empty for me. It may well work in hosts that allow `localhost`.
+
+What the page can do is read the result of the tool call. So each preview builds the one stories file with your project's own Vite and Storybook config. The result is a single script and stylesheet with fonts and images inlined, sent in the result's `_meta` field (a part of the tool result the page can read but Claude doesn't see). In my runs, `_meta` reached the page without being added to Claude's context, so a preview cost one line of context however large the bundle was.
 
 ## How it works
 

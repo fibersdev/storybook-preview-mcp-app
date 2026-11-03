@@ -24,7 +24,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: bun install --frozen-lockfile
+      # Not --frozen-lockfile: bun on macOS leaves Linux builds that declare a
+      # libc (oxlint, rollup) out of the lockfile, so the runner resolves its own.
+      - run: bun install
       - run: bun run fmt:check
       - run: bun run lint
       - run: bun run typecheck
@@ -43,7 +45,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - run: node --test test/unit/
+      - run: node --test test/unit/*.test.mjs
 
   e2e:
     name: End to end (fixtures in Chromium)
@@ -56,7 +58,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: bun install --frozen-lockfile
+      # Not --frozen-lockfile: bun on macOS leaves Linux builds that declare a
+      # libc (oxlint, rollup) out of the lockfile, so the runner resolves its own.
+      - run: bun install
       - run: bun run fixtures:install
       - run: bunx playwright install --with-deps chromium
       - run: bun run test:e2e
