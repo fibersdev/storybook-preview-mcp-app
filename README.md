@@ -8,19 +8,21 @@ Ask Claude to preview a story and it appears under the reply: your real CSS, fon
 
 You'll need Claude Code, Node 20 or later, and a project using Storybook 10 with React and Vite (`@storybook/react-vite`).
 
-In a Claude Code terminal session:
+The plugin is listed in the [fibersdev marketplace](https://github.com/fibersdev/plugins). In a Claude Code terminal session:
 
 ```
-/plugin install storybook-preview-mcp-app --marketplace fibersdev/storybook-preview-mcp-app
+/plugin marketplace add fibersdev/plugins
+/plugin install storybook-preview-mcp-app@fibersdev
 ```
 
 Or from a shell:
 
 ```bash
-claude plugin install storybook-preview-mcp-app --marketplace fibersdev/storybook-preview-mcp-app
+claude plugin marketplace add fibersdev/plugins
+claude plugin install storybook-preview-mcp-app@fibersdev
 ```
 
-In the Claude desktop app (as of November 2026): click + next to the prompt box, then Plugins, Add marketplace with `fibersdev/storybook-preview-mcp-app`, then Add plugin.
+In the Claude desktop app (as of November 2026): click + next to the prompt box, then Plugins, Add marketplace with `fibersdev/plugins`, then add storybook-preview-mcp-app.
 
 Nothing needs adding to your project.
 
