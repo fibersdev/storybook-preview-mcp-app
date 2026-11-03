@@ -1,6 +1,0 @@
-{
-  "name": "fibersdev",
-  "description": "Small Claude Code plugins from the team behind fibers.",
-  "owner": { "name": "fibers", "url": "https://github.com/fibersdev" },
-  "plugins": [{ "name": "storybook-preview-mcp-app", "source": "./" }]
-}
