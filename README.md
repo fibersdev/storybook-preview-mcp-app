@@ -1,68 +1,89 @@
 # storybook-preview-mcp-app
 
-A Claude Code plugin that shows a Storybook story live in the chat. It is an MCP App: a small web page the chat draws under a tool call.
+A Claude Code plugin that shows your Storybook stories inside the chat, live.
 
-Ask Claude to preview a story and it appears under the tool call, styled with your project's real CSS and fonts. Buttons click, menus open, and the story's `play` step (the scripted interaction a story can define) runs. Edit the component, ask again, and the new version shows.
-
-It needs no running Storybook and no addon in your project. Each preview builds the one story file with your project's own Vite and Storybook config, in about half a second once warm.
-
-## Why it is built this way
-
-Some hosts give an MCP App page no network access. In my testing in the Claude desktop app's Code tab (November 2026), a page could not load a frame, script, stylesheet or image from `localhost`, even with that address listed in the page's allowed domains. That rules out pointing a frame at a running Storybook, which is how Storybook's own MCP addon shows a preview; in the same test its frame stayed empty.
-
-What the page can do is read the result of the tool call. So the server builds the story into one bundle (HTML, CSS with fonts inlined, and JavaScript) and sends it in the result's `_meta` field. The page puts it on screen. In my runs, `_meta` reached the page without being added to Claude's context, so a preview cost one line of context however large the bundle was.
+Ask Claude to preview a story and it appears under the reply: your real CSS, fonts and decorators, buttons that click, menus that open. Edit the component, ask again, and the new version shows. You don't need Storybook running.
 
 ## Install
 
-At the prompt of a Claude Code session:
+You'll need Claude Code, Node 20 or later, and a project using Storybook 10 with React and Vite (`@storybook/react-vite`).
+
+In a Claude Code terminal session:
 
 ```
 /plugin install storybook-preview-mcp-app --marketplace fibersdev/storybook-preview-mcp-app
 ```
 
-From a shell:
+Or from a shell:
 
 ```bash
 claude plugin install storybook-preview-mcp-app --marketplace fibersdev/storybook-preview-mcp-app
 ```
 
-In the Claude desktop app: click + next to the prompt box, then Plugins, Add marketplace with `fibersdev/storybook-preview-mcp-app`, then Add plugin.
+In the Claude desktop app (as of November 2026): click + next to the prompt box, then Plugins, Add marketplace with `fibersdev/storybook-preview-mcp-app`, then Add plugin.
 
-You'll need Node 20 or later on your `PATH`.
+Nothing needs adding to your project.
 
 ## Use
 
-Ask for a story in plain words ("show me the Button primary story") and Claude calls the tools:
+Ask in plain words: "show me the Button primary story", "preview the menu open in dark mode", "what stories does the Card have?". Claude uses two tools (functions the plugin offers, which Claude calls for you):
 
+- **`preview_story`** shows one story. It takes the story's id as Storybook names it (for example `button--primary`), an optional `theme` (`host`, `light` or `dark`) and an optional `project_dir`.
 - **`list_stories`** lists the story ids in a project, optionally filtered by a word.
-- **`preview_story`** shows one story. It takes `story_id` (as Storybook names it, for example `button--primary`), an optional `theme` (`host`, `light` or `dark`) and an optional `project_dir`.
 
-In the desktop app's Code tab, the preview sits in a collapsed "Rendering widget" row under the tool call. Click it to open.
+The preview is an MCP App: a small web page the chat draws under the tool call. In the Claude desktop app's Code tab it sits in a collapsed "Rendering widget" row; click the row to open it.
 
-**Which project it builds.** The server looks for a `.storybook` folder in and below the folder it starts in, then above it. When you work in a git worktree, Claude passes the worktree's path as `project_dir`, so the preview shows the code you are editing rather than the main checkout.
+**Which project it previews.** The plugin looks for a `.storybook` folder in and below the folder Claude Code started in, then above it. In a monorepo with several, I'd expect Claude to pass `project_dir`. In a git worktree, it should pass the worktree's path, so the preview shows the code you are editing rather than the main checkout. If it picks the wrong one, name the folder in your ask.
 
-**Theme.** By default the story follows the app's light or dark theme. The page sets a `dark` or `light` class and `data-theme` on the root element, which I'd expect to cover most setups.
+**Theme.** By default the story follows the app's light or dark theme. The page sets a `dark` or `light` class and a `data-theme` attribute on the root element, which I'd expect to cover most setups.
 
 ## What it supports
 
-- **Storybook 10 with `@storybook/react-vite`.** Other frameworks are not supported yet.
-- **Your decorators and global CSS**, from `.storybook/preview.*`, applied as Storybook applies them.
-- **Your Vite config**, from `vite.config.*` or the file `main.ts` names, then `viteFinal`, in the order Storybook's Vite builder uses.
-- **Story ids** worked out with Storybook's own parser and title rules, so they match your Storybook.
+- **Storybook 10 with `@storybook/react-vite`.** Other frameworks aren't supported yet.
+- **Your Vite config**, from `vite.config.*` or the file your `main` config names, then `viteFinal`, in the order Storybook's own Vite builder uses.
+- **Your decorators and global CSS** from `.storybook/preview.*`, and each story's `play` step.
+- **Story ids worked out by Storybook's own parser**, so they match your Storybook. The tests check this against `storybook build`.
 
 ## Limits
 
 - Each preview shows the story's default args. There is no controls panel.
-- Reloading means calling the tool again; there is no automatic refresh on save.
-- A story that fetches from your dev server or an API at run time would not reach it, for the same network reason as above.
-- A bundle includes React and Storybook's preview code, so it is often 1 to 2 MB. It travels to the page, not to Claude.
+- To see a change, ask again. It doesn't refresh on save.
+- A story that fetches from your dev server or an API at run time would not reach it. The reason is below.
+- The bundle includes React and Storybook's preview code, so it is often 1 to 2 MB. It goes to the page, not to Claude.
+
+## Why it is built this way
+
+At least one host gives an MCP App (a small web page the chat draws under a tool call) no network access. In my testing in the Claude desktop app's Code tab (November 2026), the page could not load a frame, script, stylesheet or image from `localhost`, even with that address listed as allowed. That rules out pointing a frame at a running Storybook in that host.
+
+As I understand it, that is the approach Storybook's own MCP addon takes, and in the same test its frame stayed empty for me. It may well work in hosts that allow `localhost`.
+
+What the page can do is read the result of the tool call. So each preview builds the one stories file with your project's own Vite and Storybook config. The result is a single script and stylesheet with fonts and images inlined, sent in the result's `_meta` field (a part of the tool result the page can read but Claude doesn't see). In my runs, `_meta` reached the page without being added to Claude's context, so a preview cost one line of context however large the bundle was.
 
 ## How it works
 
-Three files do the work:
+- `server/server.mjs` runs the MCP server over stdio. It has no dependencies.
+- `server/mcp.mjs` answers MCP requests; `server/tools.mjs` holds the two tools.
+- `server/storybook.mjs` finds the project and lists its stories with Storybook's own loader and parser.
+- `server/build-story.mjs` builds one stories file. It runs in a child process with a time limit (two minutes, or `STORYBOOK_PREVIEW_TIMEOUT_MS`).
+- `server/page.html` is the MCP App page. It does the handshake with the host, mounts the story, runs its `play` step and follows the theme.
 
-- `server/server.mjs` is the MCP server (stdio, no dependencies). It finds the project, lists stories and runs a build per preview.
-- `server/build-story.mjs` loads your `.storybook/main.*` with Storybook's own loader, puts the Vite config together, and builds one stories file into a single script and stylesheet.
-- `server/page.html` is the MCP App page. It does the `ui/initialize` handshake (the first exchange that tells the host the page is ready), mounts the story from the tool result, runs its `play` step and follows the host theme.
+## Development
+
+```bash
+bun install
+bun run verify
+```
+
+`bun run verify` runs the format check (`bun fmt`), lint (oxlint), type check (`bun check`), version check and unit tests. The end-to-end tests build two fixture projects in `test/fixtures` and show their stories in headless Chromium, with the test playing the host:
+
+```bash
+bun run fixtures:install
+bunx playwright install chromium
+bun run test:e2e
+```
+
+CI runs all of these on every pull request.
+
+## Credits
 
 Made by [fibers](https://github.com/fibersdev). MIT licence. The icon is the "view" icon from [Lucide](https://lucide.dev) (ISC licence, notice in `.claude-plugin/ICON-LICENSE`).

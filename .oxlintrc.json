@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["unicorn", "oxc", "import", "node"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "no-unused-vars": "error",
+    "no-nested-ternary": "error",
+    "unicorn/prefer-string-replace-all": "error",
+    "unicorn/prefer-at": "error",
+    "unicorn/prefer-array-some": "error",
+    "no-underscore-dangle": ["warn", { "allow": ["_meta"] }]
+  },
+  "ignorePatterns": ["test/fixtures/**", "node_modules/**"]
+}

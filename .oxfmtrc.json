@@ -1,0 +1,4 @@
+{
+  "printWidth": 100,
+  "ignorePatterns": ["test/fixtures/*/node_modules", "test/fixtures/*/storybook-static"]
+}
