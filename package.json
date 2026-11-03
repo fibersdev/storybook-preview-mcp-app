@@ -1,10 +1,31 @@
 {
   "name": "storybook-preview-mcp-app",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Show a Storybook story live in the chat, styled and clickable, as an MCP App.",
   "license": "MIT",
+  "bin": {
+    "storybook-preview-mcp-app": "server/server.mjs"
+  },
   "type": "module",
-  "engines": { "node": ">=20" },
-  "bin": { "storybook-preview-mcp-app": "server/server.mjs" }
+  "scripts": {
+    "fmt": "bun fmt .",
+    "fmt:check": "bun fmt --check .",
+    "lint": "oxlint -c .oxlintrc.json --deny-warnings server test scripts",
+    "typecheck": "tsc -p tsconfig.json",
+    "check:versions": "node scripts/check-versions.mjs",
+    "test:unit": "node --test test/unit/",
+    "test:e2e": "node --test --test-concurrency=1 test/e2e/",
+    "fixtures:install": "node scripts/install-fixtures.mjs",
+    "check": "bun run fmt:check && bun run lint && bun run typecheck && bun run check:versions && bun run test:unit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "oxlint": "^1.90.0",
+    "playwright": "^1.64.1",
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }

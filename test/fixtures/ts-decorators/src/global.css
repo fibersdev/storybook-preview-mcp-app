@@ -1,0 +1,12 @@
+@import "@fontsource/ibm-plex-mono/400.css";
+
+:root {
+  --ink: rgb(29, 36, 51);
+}
+.dark {
+  --ink: rgb(232, 236, 244);
+}
+body {
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+}

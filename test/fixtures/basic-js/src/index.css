@@ -1,0 +1,15 @@
+:root {
+  --accent: rgb(47, 111, 222);
+  --background: rgb(255, 255, 255);
+}
+.dark {
+  --accent: rgb(138, 180, 255);
+  --background: rgb(20, 24, 34);
+}
+.btn {
+  background: var(--accent);
+  color: white;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 18px;
+}
