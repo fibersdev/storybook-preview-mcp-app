@@ -71,10 +71,10 @@ What the page can do is read the result of the tool call. So each preview builds
 
 ```bash
 bun install
-bun run check
+bun run verify
 ```
 
-`bun run check` runs the format check, lint, type check, version check and unit tests. The end-to-end tests build two fixture projects in `test/fixtures` and show their stories in headless Chromium, with the test playing the host:
+`bun run verify` runs the format check (`bun fmt`), lint (oxlint), type check (`bun check`), version check and unit tests. The end-to-end tests build two fixture projects in `test/fixtures` and show their stories in headless Chromium, with the test playing the host:
 
 ```bash
 bun run fixtures:install

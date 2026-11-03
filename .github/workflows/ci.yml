@@ -24,9 +24,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      # Not --frozen-lockfile: bun on macOS leaves Linux builds that declare a
-      # libc (oxlint, rollup) out of the lockfile, so the runner resolves its own.
-      - run: bun install
+      - run: bun install --frozen-lockfile
       - run: bun run fmt:check
       - run: bun run lint
       - run: bun run typecheck
@@ -58,9 +56,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Not --frozen-lockfile: bun on macOS leaves Linux builds that declare a
-      # libc (oxlint, rollup) out of the lockfile, so the runner resolves its own.
-      - run: bun install
+      - run: bun install --frozen-lockfile
       - run: bun run fixtures:install
       - run: bunx playwright install --with-deps chromium
       - run: bun run test:e2e

@@ -162,12 +162,27 @@ describe("ts-decorators fixture (TS config, viteFinal, decorators, fonts)", () =
     const { tab, frame, errors } = await show(result);
     const badge = frame.getByTestId("badge");
     await badge.getByText("Fixture: hello (from-decorator)").waitFor();
-    const font = await badge.evaluate(async () => {
-      await document.fonts.ready;
-      return document.fonts.check('16px "IBM Plex Mono"');
-    });
-    assert.equal(font, true, "IBM Plex Mono should load from the bundle without font-src");
-    assert.deepEqual(errors, []);
+    // The CSP has no font-src, so the font arrives through the page's
+    // fallback, which registers it from the bundle's bytes.
+    const storyFrame = tab.frames().find((f) => f !== tab.mainFrame());
+    assert.ok(storyFrame, "the story frame should exist");
+    const fontLoaded = await storyFrame
+      .waitForFunction(
+        () =>
+          [...document.fonts].some(
+            (f) => f.family.replaceAll('"', "") === "IBM Plex Mono" && f.status === "loaded",
+          ),
+        undefined,
+        { timeout: 10_000 },
+      )
+      .then(() => "loaded")
+      .catch(() =>
+        storyFrame.evaluate(() =>
+          JSON.stringify([...document.fonts].map((f) => [f.family, f.status])),
+        ),
+      );
+    assert.equal(fontLoaded, "loaded", `IBM Plex Mono should load; faces: ${fontLoaded}`);
+    assert.deepEqual(errors, [], `page errors: ${errors.join("; ")}`);
     await tab.close();
   });
 
@@ -199,14 +214,18 @@ describe("ts-decorators fixture (TS config, viteFinal, decorators, fonts)", () =
 async function assertIdsMatchStorybook(dir) {
   const out = mkdtempSync(join(tmpdir(), "sbp-index-"));
   try {
-    execFileSync(
-      join(dir, "node_modules/.bin/storybook"),
-      ["build", "--test", "--quiet", "-o", out],
-      {
-        cwd: dir,
-        stdio: "pipe",
-      },
-    );
+    try {
+      execFileSync(
+        join(dir, "node_modules/.bin/storybook"),
+        ["build", "--test", "--quiet", "-o", out],
+        { cwd: dir, stdio: "pipe" },
+      );
+    } catch (e) {
+      const err = /** @type {{ stderr?: Buffer, stdout?: Buffer }} */ (e);
+      assert.fail(
+        `storybook build failed:\n${String(err.stderr ?? "")}${String(err.stdout ?? "").slice(-2000)}`,
+      );
+    }
     /** @type {{ entries: Record<string, { id: string, type: string }> }} */
     const index = JSON.parse(readFileSync(join(out, "index.json"), "utf8"));
     const expected = Object.values(index.entries)
