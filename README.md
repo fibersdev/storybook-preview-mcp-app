@@ -20,20 +20,20 @@ Or from a shell:
 claude plugin install storybook-preview-mcp-app --marketplace fibersdev/storybook-preview-mcp-app
 ```
 
-In the Claude desktop app: click + next to the prompt box, then Plugins, Add marketplace with `fibersdev/storybook-preview-mcp-app`, then Add plugin.
+In the Claude desktop app (as of November 2026): click + next to the prompt box, then Plugins, Add marketplace with `fibersdev/storybook-preview-mcp-app`, then Add plugin.
 
 Nothing needs adding to your project.
 
 ## Use
 
-Ask in plain words: "show me the Button primary story", "preview the menu open in dark mode", "what stories does the Card have?". Claude uses two tools:
+Ask in plain words: "show me the Button primary story", "preview the menu open in dark mode", "what stories does the Card have?". Claude uses two tools (functions the plugin offers, which Claude calls for you):
 
 - **`preview_story`** shows one story. It takes the story's id as Storybook names it (for example `button--primary`), an optional `theme` (`host`, `light` or `dark`) and an optional `project_dir`.
 - **`list_stories`** lists the story ids in a project, optionally filtered by a word.
 
-In the Claude desktop app's Code tab, the preview sits in a collapsed "Rendering widget" row under the tool call. Click the row to open it.
+The preview is an MCP App: a small web page the chat draws under the tool call. In the Claude desktop app's Code tab it sits in a collapsed "Rendering widget" row; click the row to open it.
 
-**Which project it previews.** The plugin looks for a `.storybook` folder in and below the folder Claude Code started in, then above it. In a monorepo with several, Claude passes `project_dir`. In a git worktree, Claude passes the worktree's path, so the preview shows the code you are editing rather than the main checkout.
+**Which project it previews.** The plugin looks for a `.storybook` folder in and below the folder Claude Code started in, then above it. In a monorepo with several, I'd expect Claude to pass `project_dir`. In a git worktree, it should pass the worktree's path, so the preview shows the code you are editing rather than the main checkout. If it picks the wrong one, name the folder in your ask.
 
 **Theme.** By default the story follows the app's light or dark theme. The page sets a `dark` or `light` class and a `data-theme` attribute on the root element, which I'd expect to cover most setups.
 
@@ -53,9 +53,9 @@ In the Claude desktop app's Code tab, the preview sits in a collapsed "Rendering
 
 ## Why it is built this way
 
-Some hosts give an MCP App (a small web page the chat draws under a tool call) no network access. In my testing in the Claude desktop app's Code tab (November 2026), the page could not load a frame, script, stylesheet or image from `localhost`, even with that address listed as allowed. That rules out pointing a frame at a running Storybook, which is how Storybook's own MCP addon shows a preview; in the same test its frame stayed empty.
+At least one host gives an MCP App (a small web page the chat draws under a tool call) no network access. In my testing in the Claude desktop app's Code tab (November 2026), the page could not load a frame, script, stylesheet or image from `localhost`, even with that address listed as allowed. That rules out pointing a frame at a running Storybook in that host. As I understand it, that is the approach Storybook's own MCP addon takes, and in the same test its frame stayed empty for me. It may well work in hosts that allow `localhost`.
 
-What the page can do is read the result of the tool call. So each preview builds the one stories file with your project's own Vite and Storybook config into a single script and stylesheet, fonts and images inlined, and sends that in the result's `_meta` field. In my runs, `_meta` reached the page without being added to Claude's context, so a preview cost one line of context however large the bundle was.
+What the page can do is read the result of the tool call. So each preview builds the one stories file with your project's own Vite and Storybook config into a single script and stylesheet, fonts and images inlined, and sends that in the result's `_meta` field (a part of the tool result the page can read but Claude doesn't see). In my runs, `_meta` reached the page without being added to Claude's context, so a preview cost one line of context however large the bundle was.
 
 ## How it works
 
