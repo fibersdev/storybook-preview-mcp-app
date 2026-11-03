@@ -1,0 +1,95 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  html, body { margin: 0; }
+  #note { margin: 0; padding: 4px 8px; font: 11px/1.4 ui-monospace, Menlo, monospace; color: GrayText; }
+  #storybook-root { padding: 16px; }
+</style></head><body>
+  <p id="note">Waiting for the story…</p>
+  <div id="storybook-root"></div>
+  <script>
+    // MCP App page for storybook-preview-mcp-app. It fetches nothing: the
+    // story's CSS and JS arrive in the tool result's _meta["storybook/story"].
+    const $ = (id) => document.getElementById(id);
+    let hostTheme = "light";
+    let wanted = "host";
+    const post = (m) => window.parent.postMessage({ jsonrpc: "2.0", ...m }, "*");
+    const reportSize = () =>
+      post({ method: "ui/notifications/size-changed", params: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight } });
+
+    // The common theming hooks: a .dark or .light class, data-theme, and
+    // color-scheme for native controls.
+    function applyTheme() {
+      const theme = wanted === "host" ? hostTheme : wanted;
+      const root = document.documentElement;
+      root.classList.toggle("dark", theme === "dark");
+      root.classList.toggle("light", theme !== "dark");
+      root.dataset.theme = theme;
+      root.style.colorScheme = theme;
+      root.style.background = "var(--background, Canvas)";
+    }
+
+    // Fonts travel as data: URLs in the CSS. Where a host's CSP refuses them,
+    // register them again from their bytes, which fetches nothing.
+    async function fonts(css) {
+      await document.fonts.ready;
+      const loaded = [...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family);
+      const re = /@font-face\s*{([^}]*)}/g;
+      let m;
+      while ((m = re.exec(css))) {
+        const family = /font-family:\s*["']?([^;"']+)/.exec(m[1])?.[1];
+        const b64 = /url\((?:["'])?data:[^;]+;base64,([^)"']+)/.exec(m[1])?.[1];
+        if (!family || !b64 || loaded.includes(family)) continue;
+        try {
+          const face = new FontFace(family, Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer, {
+            weight: /font-weight:\s*([^;]+)/.exec(m[1])?.[1] ?? "normal",
+            style: /font-style:\s*([^;]+)/.exec(m[1])?.[1] ?? "normal",
+          });
+          await face.load();
+          document.fonts.add(face);
+        } catch {}
+      }
+      reportSize();
+    }
+
+    async function show(story) {
+      if (story.error) { $("note").textContent = story.error; reportSize(); return; }
+      wanted = story.theme ?? "host";
+      const style = document.createElement("style");
+      style.textContent = story.css;
+      document.head.appendChild(style);
+      const script = document.createElement("script");
+      script.textContent = story.js;
+      document.body.appendChild(script);
+      applyTheme();
+      fonts(story.css);
+      const result = await window.__story?.mount(story.id, $("storybook-root"));
+      applyTheme();
+      $("note").textContent = !result?.ok
+        ? "Story " + story.id + " was not in its file. Found: " + (window.__story?.ids ?? []).join(", ")
+        : story.title + (result.playError ? " (play step failed: " + result.playError + ")" : "");
+      reportSize();
+    }
+
+    const INIT_ID = 1;
+    window.addEventListener("message", (event) => {
+      const m = event.data;
+      if (!m || m.jsonrpc !== "2.0") return;
+      if (m.id === INIT_ID) {
+        hostTheme = m.result?.hostContext?.theme ?? hostTheme;
+        applyTheme();
+        post({ method: "ui/notifications/initialized", params: {} });
+      } else if (m.method === "ui/notifications/host-context-changed") {
+        hostTheme = m.params?.theme ?? hostTheme;
+        applyTheme();
+      } else if (m.method === "ui/notifications/tool-result") {
+        const story = m.params?._meta?.["storybook/story"];
+        if (story) show(story);
+        else $("note").textContent = "The tool result carried no story.";
+      }
+      reportSize();
+    });
+    post({ id: INIT_ID, method: "ui/initialize", params: { protocolVersion: "2026-01-26", appInfo: { name: "storybook-preview", version: "0.1.0" }, appCapabilities: {} } });
+    new ResizeObserver(reportSize).observe(document.body);
+    reportSize();
+  </script>
+</body></html>
