@@ -2,9 +2,19 @@
   "name": "storybook-preview-mcp-app",
   "version": "0.1.0",
   "description": "Show a Storybook story live in the chat, styled and clickable, as an MCP App. Works where the host gives the app no network access.",
-  "author": { "name": "fibers", "url": "https://github.com/fibersdev" },
+  "author": {
+    "name": "fibers",
+    "url": "https://github.com/fibersdev"
+  },
   "homepage": "https://github.com/fibersdev/storybook-preview-mcp-app",
   "repository": "https://github.com/fibersdev/storybook-preview-mcp-app",
   "license": "MIT",
-  "keywords": ["storybook", "mcp-app", "preview", "react", "vite"]
+  "keywords": [
+    "storybook",
+    "mcp-app",
+    "preview",
+    "react",
+    "vite"
+  ],
+  "icon": "./.claude-plugin/icon.png"
 }

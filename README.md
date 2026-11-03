@@ -65,4 +65,4 @@ Three files do the work:
 - `server/build-story.mjs` loads your `.storybook/main.*` with Storybook's own loader, puts the Vite config together, and builds one stories file into a single script and stylesheet.
 - `server/page.html` is the MCP App page. It does the `ui/initialize` handshake (the first exchange that tells the host the page is ready), mounts the story from the tool result, runs its `play` step and follows the host theme.
 
-Made by [fibers](https://github.com/fibersdev). MIT licence.
+Made by [fibers](https://github.com/fibersdev). MIT licence. The icon is the "view" icon from [Lucide](https://lucide.dev) (ISC licence, notice in `.claude-plugin/ICON-LICENSE`).
